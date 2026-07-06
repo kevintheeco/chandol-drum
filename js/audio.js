@@ -69,20 +69,47 @@ export class DrumKit {
   snare(t, { accent, ghost } = {}) {
     const peak = ghost ? 0.13 : accent ? 0.95 : 0.55;
     this._noise(t, 0.25, 'bandpass', 1800, 0.7, peak, accent ? 0.18 : 0.13);
-    if (!ghost) this._tone(t, 'triangle', 185, 140, 0.05, peak * 0.55, 0.07);
+    this._noise(t, 0.18, 'highpass', 4500, 0.6, peak * 0.5, 0.09); // 스냅(와이어 소리)
+    if (!ghost) {
+      this._tone(t, 'triangle', 185, 140, 0.05, peak * 0.55, 0.07);
+      this._tone(t, 'sine', 330, 280, 0.04, peak * 0.25, 0.05); // 몸통 울림
+    }
+  }
+
+  // 금속성 심벌 톤 — 비화성 배음 6개(사각파)를 겹쳐 진짜 금속 울림을 만든다 (808 계열 기법)
+  _metal(t, baseFreq, hpFreq, peak, decay) {
+    const env = this._env(t, peak, decay);
+    const hp = this.ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = hpFreq;
+    hp.connect(env);
+    for (const ratio of [1.0, 1.342, 1.2312, 1.6532, 1.9523, 2.1523]) {
+      const osc = this.ctx.createOscillator();
+      osc.type = 'square';
+      osc.frequency.value = baseFreq * ratio;
+      const g = this.ctx.createGain();
+      g.gain.value = 1 / 6;
+      osc.connect(g);
+      g.connect(hp);
+      osc.start(t);
+      osc.stop(t + decay + 0.05);
+    }
   }
 
   hihat(t, { open, accent } = {}) {
-    this._noise(t, open ? 0.5 : 0.08, 'highpass', 7500, 0.8, accent ? 0.5 : 0.32, open ? 0.4 : 0.05);
+    this._metal(t, 3200, 7000, accent ? 0.42 : 0.28, open ? 0.45 : 0.055);
+    this._noise(t, open ? 0.5 : 0.08, 'highpass', 8500, 0.8, accent ? 0.2 : 0.13, open ? 0.35 : 0.04);
   }
 
   ride(t, { accent } = {}) {
-    this._noise(t, 0.6, 'bandpass', 6200, 1.2, accent ? 0.35 : 0.25, 0.5);
-    this._tone(t, 'triangle', 890, null, 0, 0.09, 0.3);
+    this._metal(t, 2100, 5000, accent ? 0.25 : 0.17, 0.7);
+    this._tone(t, 'triangle', 880, null, 0, 0.1, 0.35); // 핑(스틱 끝 타격음)
+    this._noise(t, 0.8, 'bandpass', 7000, 1.0, accent ? 0.12 : 0.08, 0.6);
   }
 
   crash(t, { accent } = {}) {
-    this._noise(t, 1.3, 'highpass', 4200, 0.6, accent ? 0.65 : 0.5, 1.1);
+    this._metal(t, 2600, 4200, accent ? 0.5 : 0.38, 1.2);
+    this._noise(t, 1.4, 'highpass', 4500, 0.6, accent ? 0.45 : 0.32, 1.0);
   }
 
   tom(t, high, { accent } = {}) {

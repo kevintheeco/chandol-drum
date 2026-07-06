@@ -10,55 +10,68 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">
-      <span class="brand-mark">🥁</span>
+    <a class="brand" href="#">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <ellipse cx="12" cy="9" rx="9" ry="3.2" />
+        <path d="M3 9v7c0 1.8 4 3.2 9 3.2s9-1.4 9-3.2V9" fill="none" />
+        <line x1="5" y1="4" x2="11" y2="8.4" />
+        <line x1="21" y1="3" x2="13.5" y2="8.2" />
+      </svg>
       <span class="brand-name">찬돌드럼</span>
-    </div>
+    </a>
     <p class="tagline">보고 · 듣고 · 맞춰 치는 드럼 연습</p>
   </header>
 
   <div class="layout">
-    <nav id="lessonNav" class="sidebar"></nav>
+    <nav id="lessonNav" class="sidebar" aria-label="레슨 목록"></nav>
 
     <main class="content">
-      <div class="lesson-head">
-        <p id="courseName" class="course-name"></p>
-        <h2 id="lessonTitle"></h2>
-        <p id="lessonGoal" class="goal"></p>
-      </div>
+      <section class="kit-stage">
+        <div class="kit-glow" aria-hidden="true"></div>
+        <div id="drumkitBox"></div>
+        <p class="kit-hint">드럼을 눌러 소리를 들어보세요 — 재생 중엔 악보를 따라 연주됩니다</p>
+      </section>
 
-      <div id="legend" class="legend"></div>
-
-      <div class="notation-wrap">
-        <div id="countBadge" class="count-badge"></div>
-        <div class="notation-scroll">
-          <svg id="notation"></svg>
-        </div>
-      </div>
-
-      <div class="controls">
-        <button id="playBtn" class="play-btn">▶ 재생</button>
-
-        <div class="bpm-box">
-          <label for="bpm">빠르기 <strong id="bpmValue">60</strong> BPM</label>
-          <input type="range" id="bpm" min="40" max="200" value="60" />
+      <section class="lesson-panel">
+        <div class="lesson-head">
+          <p id="courseName" class="course-name"></p>
+          <h1 id="lessonTitle"></h1>
+          <p id="lessonGoal" class="goal"></p>
         </div>
 
-        <div class="toggles">
-          <label><input type="checkbox" id="metronome" checked /> 메트로놈</label>
-          <label><input type="checkbox" id="countIn" checked /> 카운트인</label>
-          <label><input type="checkbox" id="loop" checked /> 반복</label>
+        <div id="legend" class="legend"></div>
+
+        <div class="notation-wrap">
+          <div id="countBadge" class="count-badge"></div>
+          <div class="notation-scroll">
+            <svg id="notation"></svg>
+          </div>
         </div>
 
-        <button id="doneBtn" class="done-btn">완료 표시</button>
-      </div>
+        <div class="controls">
+          <button id="playBtn" class="play-btn">재생</button>
 
-      <div class="tips-box">
-        <h3>연습 팁</h3>
-        <ul id="tips"></ul>
-      </div>
+          <div class="bpm-box">
+            <label for="bpm">빠르기 <strong id="bpmValue">60</strong> BPM</label>
+            <input type="range" id="bpm" min="40" max="200" value="60" />
+          </div>
 
-      <p class="hint">스페이스바로 재생/정지 · 완벽해지면 빠르기를 5씩 올려보세요</p>
+          <div class="toggles">
+            <label><input type="checkbox" id="metronome" checked /> 메트로놈</label>
+            <label><input type="checkbox" id="countIn" checked /> 카운트인</label>
+            <label><input type="checkbox" id="loop" checked /> 반복</label>
+          </div>
+
+          <button id="doneBtn" class="done-btn">완료 표시</button>
+        </div>
+
+        <div class="tips-box">
+          <h2>연습 팁</h2>
+          <ul id="tips"></ul>
+        </div>
+
+        <p class="hint">스페이스바로 재생/정지 · 완벽해지면 빠르기를 5씩 올려보세요</p>
+      </section>
     </main>
   </div>
 

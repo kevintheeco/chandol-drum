@@ -4,9 +4,13 @@ import { COURSES } from './curriculum.js';
 import { parsePattern, usedInstruments, INSTRUMENTS } from './pattern.js';
 import { renderNotation } from './notation.js';
 import { DrumKit, Player } from './audio.js';
+import { buildDrumKit } from './drumkit.js';
 
 const kit = new DrumKit();
 const player = new Player(kit);
+const stageKit = buildDrumKit(document.querySelector('#drumkitBox'), (inst) => {
+  kit.play(inst, kit.now());
+});
 
 const $ = (sel) => document.querySelector(sel);
 const DONE_KEY = 'chandol-done';
@@ -121,6 +125,11 @@ function makePlayhead(layout) {
 function movePlayhead(stepIdx) {
   const ph = $('#playhead');
   if (!ph || !current) return;
+  if (stepIdx >= 0) {
+    // 무대 드럼세트도 악보를 따라 반짝인다
+    const bar = current.bars[Math.floor(stepIdx / 16)];
+    for (const hit of bar.steps[stepIdx % 16].hits) stageKit.flash(hit.inst);
+  }
   if (stepIdx < 0) {
     // 카운트인 표시
     ph.style.display = 'none';
@@ -136,7 +145,7 @@ function movePlayhead(stepIdx) {
 // ---------- 컨트롤 ----------
 function resetPlayButton() {
   const btn = $('#playBtn');
-  btn.textContent = '▶ 재생';
+  btn.textContent = '재생';
   btn.classList.remove('playing');
   const ph = $('#playhead');
   if (ph) ph.style.display = 'none';
@@ -151,7 +160,7 @@ function wireControls() {
     } else {
       player.bpm = Number($('#bpm').value);
       player.start();
-      playBtn.textContent = '⏹ 정지';
+      playBtn.textContent = '정지';
       playBtn.classList.add('playing');
     }
   });
