@@ -171,6 +171,15 @@ function wireControls() {
     $('#bpmValue').textContent = e.target.value;
     player.bpm = Number(e.target.value);
   });
+  const kitSelect = $('#kitSelect');
+  kitSelect.value = localStorage.getItem('chandol-kit') || 'acoustic';
+  kit.kit = kitSelect.value;
+  kitSelect.addEventListener('change', (e) => {
+    kit.kit = e.target.value;
+    localStorage.setItem('chandol-kit', e.target.value);
+    kit.play('SD', kit.now()); // 바뀐 소리 즉시 미리듣기
+  });
+
   $('#metronome').addEventListener('change', (e) => { player.metronome = e.target.checked; });
   $('#countIn').addEventListener('change', (e) => { player.countIn = e.target.checked; });
   $('#loop').addEventListener('change', (e) => { player.loop = e.target.checked; });

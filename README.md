@@ -23,3 +23,7 @@
 | `js/app.js` | 화면 연결(재생·BPM·완료 체크) |
 
 빌드 과정 없음 — 정적 파일 그대로 GitHub Pages에서 서빙.
+
+## 사운드 크레딧
+
+어쿠스틱 킷은 [Salamander Drumkit](https://github.com/SanicBoom/salamander-drumkit) (Alexander Holm, CC0 퍼블릭 도메인) 실제 녹음 샘플을 다듬어 사용. `sounds/salamander/`에 mp3로 수록.

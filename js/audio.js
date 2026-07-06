@@ -1,11 +1,72 @@
-// 드럼 사운드(웹오디오 합성) + 메트로놈 + 시퀀서
-// 샘플 파일 없이 브라우저가 직접 소리를 만든다 — 어디서나 즉시 재생.
+// 드럼 사운드(스튜디오 녹음 샘플 + 웹오디오 합성) + 메트로놈 + 시퀀서
+// 기본 킷 = 살라만더 드럼킷(Alexander Holm, CC0) 실제 녹음.
+// 샘플이 로딩되기 전이나 '일렉트로닉' 킷 선택 시에는 합성음으로 재생.
+
+// 악기별 샘플: 세기(accent/normal/ghost)마다 파일 목록, 같은 세기는 무작위 로테이션
+const SAMPLE_DIR = 'sounds/salamander/';
+const SAMPLE_MAP = {
+  BD: { accent: [['kick_OH_FF_1', 1.0], ['kick_OH_FF_2', 1.0]],
+        normal: [['kick_OH_FF_1', 0.7], ['kick_OH_FF_2', 0.7]],
+        ghost:  [['kick_OH_P_1', 0.6]] },
+  SD: { accent: [['snare_OH_FF_1', 1.0], ['snare_OH_FF_2', 1.0]],
+        normal: [['snare_OH_MP_1', 1.0]],
+        ghost:  [['snare_OH_Ghost_1', 0.9]] },
+  HH: { accent: [['hihatClosed_OH_F_1', 1.0], ['hihatClosed_OH_F_2', 1.0]],
+        normal: [['hihatClosed_OH_F_1', 0.65], ['hihatClosed_OH_F_2', 0.65]],
+        ghost:  [['hihatClosed_OH_P_1', 0.7]] },
+  OH: { accent: [['hihatOpen_OH_F_1', 1.0]],
+        normal: [['hihatOpen_OH_F_1', 0.75]],
+        ghost:  [['hihatOpen_OH_P_1', 0.7]] },
+  CR: { accent: [['crash1_OH_FF_1', 1.0], ['crash1_OH_FF_2', 1.0]],
+        normal: [['crash1_OH_FF_1', 0.7], ['crash1_OH_FF_2', 0.7]],
+        ghost:  [['crash1_OH_P_1', 0.7]] },
+  RD: { accent: [['ride1_OH_FF_1', 0.9]],
+        normal: [['ride1_OH_MP_1', 1.0]],
+        ghost:  [['ride1_OH_MP_1', 0.6]] },
+  T1: { accent: [['hiTom_OH_FF_1', 1.0]],
+        normal: [['hiTom_OH_F_1', 1.0]],
+        ghost:  [['hiTom_OH_F_1', 0.6]] },
+  T2: { accent: [['loTom_OH_FF_1', 1.0]],
+        normal: [['loTom_OH_MP_1', 1.0]],
+        ghost:  [['loTom_OH_MP_1', 0.6]] },
+};
 
 export class DrumKit {
   constructor() {
     this.ctx = null;
     this.master = null;
     this.noiseBuf = null;
+    this.kit = 'acoustic';        // 'acoustic'(녹음 샘플) | 'electronic'(합성)
+    this.samples = null;          // 파일명 → AudioBuffer
+    this._fetched = null;         // 파일명 → ArrayBuffer (디코딩 전)
+    this._openHatSources = [];    // 열린 하이햇 초크용
+    this._prefetch();
+  }
+
+  // 페이지가 뜨자마자 샘플 파일을 미리 받아둔다 (디코딩은 첫 재생 때)
+  async _prefetch() {
+    const names = new Set();
+    for (const inst of Object.values(SAMPLE_MAP))
+      for (const layer of Object.values(inst))
+        for (const [name] of layer) names.add(name);
+    const fetched = {};
+    await Promise.all([...names].map(async (name) => {
+      try {
+        const res = await fetch(SAMPLE_DIR + name + '.mp3');
+        if (res.ok) fetched[name] = await res.arrayBuffer();
+      } catch { /* 오프라인 등 실패 시 합성음으로 폴백 */ }
+    }));
+    this._fetched = fetched;
+    if (this.ctx) this._decodeAll();
+  }
+
+  async _decodeAll() {
+    if (this.samples || !this._fetched) return;
+    const samples = {};
+    await Promise.all(Object.entries(this._fetched).map(async ([name, buf]) => {
+      try { samples[name] = await this.ctx.decodeAudioData(buf.slice(0)); } catch {}
+    }));
+    this.samples = samples;
   }
 
   ensure() {
@@ -21,9 +82,42 @@ export class DrumKit {
       this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
       const data = this.noiseBuf.getChannelData(0);
       for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+      this._decodeAll();
     }
     if (this.ctx.state === 'suspended') this.ctx.resume();
     return this.ctx;
+  }
+
+  // 녹음 샘플 재생. 재생했으면 true, 아직 준비 전이면 false(합성음 폴백)
+  _playSample(inst, t, flags = {}) {
+    if (!this.samples) return false;
+    const layers = SAMPLE_MAP[inst];
+    if (!layers) return false;
+    const level = flags.ghost ? 'ghost' : flags.accent ? 'accent' : 'normal';
+    const pool = layers[level];
+    const [name, gainVal] = pool[Math.floor(Math.random() * pool.length)];
+    const buf = this.samples[name];
+    if (!buf) return false;
+
+    // 닫힌 하이햇을 치면 울리던 열린 하이햇을 잡는다 (실제 페달 동작)
+    if (inst === 'HH') {
+      for (const g of this._openHatSources) {
+        g.gain.cancelScheduledValues(t);
+        g.gain.setValueAtTime(g.gain.value, t);
+        g.gain.linearRampToValueAtTime(0.0001, t + 0.04);
+      }
+      this._openHatSources = [];
+    }
+
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    const gain = this.ctx.createGain();
+    gain.gain.value = gainVal;
+    src.connect(gain);
+    gain.connect(this.master);
+    src.start(t);
+    if (inst === 'OH') this._openHatSources.push(gain);
+    return true;
   }
 
   now() {
@@ -122,6 +216,8 @@ export class DrumKit {
   }
 
   play(inst, t, flags = {}) {
+    this.ensure();
+    if (this.kit === 'acoustic' && this._playSample(inst, t, flags)) return;
     switch (inst) {
       case 'BD': return this.kick(t, flags.accent);
       case 'SD': return this.snare(t, flags);

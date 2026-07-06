@@ -332,6 +332,24 @@ body {
 }
 .toggles input { accent-color: var(--gold); }
 
+.kit-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.kit-select select {
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
 .done-btn {
   margin-left: auto;
   font-size: 13px;
