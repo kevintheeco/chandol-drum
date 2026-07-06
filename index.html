@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>찬돌드럼 — 드럼 학습</title>
+  <meta name="description" content="악보 보고, 듣고, 메트로놈과 함께 연습하는 드럼 학습앱" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥁</text></svg>" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">🥁</span>
+      <span class="brand-name">찬돌드럼</span>
+    </div>
+    <p class="tagline">보고 · 듣고 · 맞춰 치는 드럼 연습</p>
+  </header>
+
+  <div class="layout">
+    <nav id="lessonNav" class="sidebar"></nav>
+
+    <main class="content">
+      <div class="lesson-head">
+        <p id="courseName" class="course-name"></p>
+        <h2 id="lessonTitle"></h2>
+        <p id="lessonGoal" class="goal"></p>
+      </div>
+
+      <div id="legend" class="legend"></div>
+
+      <div class="notation-wrap">
+        <div id="countBadge" class="count-badge"></div>
+        <div class="notation-scroll">
+          <svg id="notation"></svg>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="playBtn" class="play-btn">▶ 재생</button>
+
+        <div class="bpm-box">
+          <label for="bpm">빠르기 <strong id="bpmValue">60</strong> BPM</label>
+          <input type="range" id="bpm" min="40" max="200" value="60" />
+        </div>
+
+        <div class="toggles">
+          <label><input type="checkbox" id="metronome" checked /> 메트로놈</label>
+          <label><input type="checkbox" id="countIn" checked /> 카운트인</label>
+          <label><input type="checkbox" id="loop" checked /> 반복</label>
+        </div>
+
+        <button id="doneBtn" class="done-btn">완료 표시</button>
+      </div>
+
+      <div class="tips-box">
+        <h3>연습 팁</h3>
+        <ul id="tips"></ul>
+      </div>
+
+      <p class="hint">스페이스바로 재생/정지 · 완벽해지면 빠르기를 5씩 올려보세요</p>
+    </main>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
