@@ -1,5 +1,5 @@
-/* 찬돌드럼 — 무대 조명 다크 테마
-   규칙: 포인트 컬러는 골드 하나만 / 모서리는 표면 16px·버튼 풀필 / 페이지 전체 단일 다크 */
+/* 찬돌드럼, 무대 조명 다크 테마
+   규칙: 포인트 컬러는 골드 하나 / 모서리는 표면 16px, 버튼 풀필 / 페이지 전체 단일 다크 테마 */
 :root {
   --bg: #0d0e11;
   --bg-raise: #14161b;
@@ -8,13 +8,14 @@
   --line: rgba(255, 255, 255, 0.07);
   --line-strong: rgba(255, 255, 255, 0.13);
   --text: #ecebe7;
-  --text-dim: #8f929b;
+  --text-dim: #93959d;
   --gold: #e2a53f;
   --gold-deep: #b07f24;
   --gold-soft: rgba(226, 165, 63, 0.14);
   --ok: #58c68c;
   --r-surface: 16px;
   --shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -22,113 +23,123 @@
 html { scroll-behavior: smooth; }
 
 body {
-  background: radial-gradient(1200px 500px at 50% -10%, #1a1d24 0%, var(--bg) 60%);
+  background: radial-gradient(1400px 600px at 60% -12%, #1c2029 0%, var(--bg) 62%);
   color: var(--text);
-  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  font-family: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   line-height: 1.6;
   min-height: 100dvh;
+  word-break: keep-all; /* 한글 단어 중간 줄바꿈 방지 */
 }
 
 /* ── 상단바 ── */
 .topbar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  height: 64px;
-  padding: 0 28px;
+  justify-content: space-between;
+  height: 68px;
+  padding: 0 clamp(20px, 4vw, 44px);
   border-bottom: 1px solid var(--line);
-  background: rgba(13, 14, 17, 0.82);
-  backdrop-filter: blur(12px);
+  background: rgba(13, 14, 17, 0.78);
+  backdrop-filter: blur(14px);
   position: sticky;
   top: 0;
   z-index: 10;
 }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
 .brand-mark {
-  width: 26px;
-  height: 26px;
+  width: 27px;
+  height: 27px;
   stroke: var(--gold);
   stroke-width: 1.7;
   fill: none;
   stroke-linecap: round;
 }
 .brand-name { font-size: 19px; font-weight: 800; letter-spacing: -0.03em; }
-.tagline { color: var(--text-dim); font-size: 13px; letter-spacing: -0.01em; }
-
-/* ── 레이아웃 ── */
-.layout {
-  display: grid;
-  grid-template-columns: 272px minmax(0, 1fr);
-  max-width: 1400px;
-  margin: 0 auto;
-  min-height: calc(100dvh - 64px);
-}
-
-/* ── 사이드바 ── */
-.sidebar {
-  border-right: 1px solid var(--line);
-  padding: 22px 14px 40px;
-  overflow-y: auto;
-}
-.nav-course { margin-bottom: 26px; }
-.nav-course h3 {
-  font-size: 13px;
+.top-cta {
+  font-size: 14px;
   font-weight: 700;
   color: var(--gold);
-  letter-spacing: 0.02em;
-  padding: 0 12px 2px;
-}
-.nav-desc { font-size: 12px; color: var(--text-dim); padding: 0 12px 10px; line-height: 1.5; }
-.nav-lesson {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: none;
-  color: var(--text);
-  font-size: 14px;
-  font-family: inherit;
-  padding: 9px 12px;
+  text-decoration: none;
+  border: 1px solid rgba(226, 165, 63, 0.35);
   border-radius: 999px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  padding: 9px 20px;
+  transition: background 0.2s var(--ease-out), color 0.2s;
 }
-.nav-lesson:hover { background: var(--panel); }
-.nav-lesson.active { background: var(--gold-soft); color: var(--gold); font-weight: 700; }
-.nav-lesson.done .nav-check { color: var(--ok); }
-.nav-check { width: 15px; flex-shrink: 0; font-weight: 800; color: transparent; font-size: 13px; }
+.top-cta:hover { background: var(--gold-soft); }
 
-/* ── 본문 ── */
-.content { padding: 26px 32px 60px; min-width: 0; display: flex; flex-direction: column; gap: 22px; }
+/* ── 히어로 (비대칭 분할: 좌 카피, 우 드럼세트) ── */
+.hero {
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  align-items: center;
+  gap: clamp(24px, 4vw, 56px);
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: clamp(40px, 6vh, 88px) clamp(20px, 4vw, 44px) clamp(28px, 4vh, 56px);
+}
+.hero-copy h1 {
+  font-size: clamp(34px, 4.6vw, 58px);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.12;
+  animation: rise 0.7s var(--ease-out) both;
+}
+.hero-sub {
+  margin-top: 18px;
+  font-size: clamp(15px, 1.4vw, 18px);
+  color: var(--text-dim);
+  max-width: 42ch;
+  animation: rise 0.7s var(--ease-out) 0.12s both;
+}
+.cta {
+  display: inline-block;
+  margin-top: 30px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #17130a;
+  text-decoration: none;
+  background: linear-gradient(180deg, var(--gold), var(--gold-deep));
+  border-radius: 999px;
+  padding: 15px 38px;
+  box-shadow: 0 6px 24px rgba(226, 165, 63, 0.28);
+  transition: transform 0.15s var(--ease-out), box-shadow 0.2s;
+  animation: rise 0.7s var(--ease-out) 0.22s both;
+}
+.cta:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(226, 165, 63, 0.42); }
+.cta:active { transform: scale(0.98); }
 
-/* ── 드럼 무대 ── */
-.kit-stage {
+.hero-kit {
   position: relative;
   background:
-    radial-gradient(640px 300px at 50% 8%, rgba(226, 165, 63, 0.09), transparent 70%),
+    radial-gradient(620px 300px at 50% 6%, rgba(226, 165, 63, 0.10), transparent 70%),
     linear-gradient(180deg, var(--bg-raise), var(--panel));
   border: 1px solid var(--line);
   border-radius: var(--r-surface);
-  padding: 18px 18px 10px;
+  padding: 22px 18px 8px;
   box-shadow: var(--shadow);
   overflow: hidden;
+  animation: rise 0.8s var(--ease-out) 0.15s both;
 }
 .kit-glow {
   position: absolute;
   inset: auto 0 -40px 0;
-  height: 120px;
-  background: radial-gradient(50% 100% at 50% 100%, rgba(226, 165, 63, 0.10), transparent);
+  height: 130px;
+  background: radial-gradient(50% 100% at 50% 100%, rgba(226, 165, 63, 0.11), transparent);
   pointer-events: none;
 }
-#drumkitBox { max-width: 620px; margin: 0 auto; }
+#drumkitBox { max-width: 640px; margin: 0 auto; }
 .drumkit { width: 100%; height: auto; display: block; }
 .kit-hint {
   text-align: center;
   font-size: 12.5px;
   color: var(--text-dim);
-  padding: 6px 0 8px;
+  padding: 8px 0 10px;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* 드럼 조각들 */
@@ -166,10 +177,56 @@ body {
 }
 .kit-piece:hover .kit-label { opacity: 1; }
 
-/* ── 레슨 패널 ── */
+/* ── 연습 레이아웃 ── */
+.layout {
+  display: grid;
+  grid-template-columns: 272px minmax(0, 1fr);
+  max-width: 1400px;
+  margin: 0 auto;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 68px;
+}
+
+/* ── 사이드바 ── */
+.sidebar {
+  border-right: 1px solid var(--line);
+  padding: 26px 14px 48px;
+}
+.nav-course { margin-bottom: 26px; }
+.nav-course h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.02em;
+  padding: 0 12px 2px;
+}
+.nav-desc { font-size: 12px; color: var(--text-dim); padding: 0 12px 10px; line-height: 1.5; }
+.nav-lesson {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  padding: 9px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.nav-lesson:hover { background: var(--panel); }
+.nav-lesson.active { background: var(--gold-soft); color: var(--gold); font-weight: 700; }
+.nav-lesson.done .nav-check { color: var(--ok); }
+.nav-check { width: 15px; flex-shrink: 0; font-weight: 800; color: transparent; font-size: 13px; }
+
+/* ── 본문 ── */
+.content { padding: 30px 34px 64px; min-width: 0; }
 .lesson-panel { display: flex; flex-direction: column; gap: 16px; }
 .course-name { font-size: 13px; color: var(--gold); font-weight: 700; }
-.lesson-head h1 { font-size: 30px; letter-spacing: -0.035em; line-height: 1.15; margin: 2px 0 6px; }
+.lesson-head h2 { font-size: 30px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.15; margin: 2px 0 6px; }
 .goal { color: var(--text-dim); font-size: 15px; max-width: 65ch; }
 
 /* 범례 */
@@ -228,7 +285,7 @@ body {
 .nt-count { font-size: 10px; fill: #8d8778; text-anchor: middle; }
 .nt-count-beat { font-size: 12px; fill: #4a463d; font-weight: 700; }
 .nt-stick { font-size: 11px; fill: #a8641c; text-anchor: middle; font-weight: 700; }
-#playhead { fill: rgba(226, 165, 63, 0.24); transition: x 0.04s linear; }
+#playhead { fill: rgba(226, 165, 63, 0.24); }
 
 /* ── 컨트롤 ── */
 .controls {
@@ -298,23 +355,51 @@ body {
   border-radius: var(--r-surface);
   padding: 18px 22px;
 }
-.tips-box h2 { font-size: 14px; font-weight: 700; color: var(--gold); margin-bottom: 8px; }
+.tips-box h3 { font-size: 14px; font-weight: 700; color: var(--gold); margin-bottom: 8px; }
 .tips-box ul { padding-left: 18px; }
 .tips-box li { font-size: 14px; margin-bottom: 5px; color: var(--text); }
 .tips-box li::marker { color: var(--gold); }
 
-.hint { font-size: 12px; color: var(--text-dim); text-align: center; }
+.hint { font-size: 12px; color: var(--text-dim); text-align: center; margin-top: 4px; }
+
+/* ── 푸터 ── */
+.footer {
+  border-top: 1px solid var(--line);
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 34px clamp(20px, 4vw, 44px) 46px;
+}
+.footer p:first-child { font-weight: 800; letter-spacing: -0.02em; }
+.footer-sub { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+
+/* ── 스크롤 리빌 (등장 모션: 시선 순서를 만들기 위한 것) ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
+}
+.reveal.shown { opacity: 1; transform: none; }
+
+/* ── 모션 최소화 설정 존중 ── */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .hero-copy h1, .hero-sub, .cta, .hero-kit { animation: none; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .kit-piece.hit { animation: none; filter: brightness(1.6); }
+}
 
 /* ── 모바일 ── */
-@media (max-width: 860px) {
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; padding-top: 34px; }
+  .hero-copy h1 br { display: none; }
   .layout { grid-template-columns: 1fr; }
   .sidebar {
     border-right: none;
     border-bottom: 1px solid var(--line);
-    max-height: 230px;
+    max-height: 240px;
+    overflow-y: auto;
   }
-  .content { padding: 18px 14px 48px; }
-  .lesson-head h1 { font-size: 24px; }
+  .content { padding: 20px 16px 52px; }
+  .lesson-head h2 { font-size: 24px; }
   .done-btn { margin-left: 0; }
-  .tagline { display: none; }
 }

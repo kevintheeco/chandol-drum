@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>찬돌드럼 — 드럼 학습</title>
+  <title>찬돌드럼, 드럼 학습</title>
   <meta name="description" content="악보 보고, 듣고, 메트로놈과 함께 연습하는 드럼 학습앱" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥁</text></svg>" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -19,36 +20,43 @@
       </svg>
       <span class="brand-name">찬돌드럼</span>
     </a>
-    <p class="tagline">보고 · 듣고 · 맞춰 치는 드럼 연습</p>
+    <a class="top-cta" href="#practice">연습 시작</a>
   </header>
 
-  <div class="layout">
+  <section class="hero">
+    <div class="hero-copy">
+      <h1>오늘 처음 잡은 스틱도 <br />그루브가 됩니다</h1>
+      <p class="hero-sub">악보를 보고, 소리로 듣고, 메트로놈에 맞춰 몸으로 익히는 드럼 연습실.</p>
+      <a class="cta" href="#practice">연습 시작</a>
+    </div>
+    <div class="hero-kit">
+      <div class="kit-glow" aria-hidden="true"></div>
+      <div id="drumkitBox"></div>
+      <p class="kit-hint">드럼을 누르면 소리가 납니다. 재생 중에는 악보를 따라 연주됩니다.</p>
+    </div>
+  </section>
+
+  <div class="layout" id="practice">
     <nav id="lessonNav" class="sidebar" aria-label="레슨 목록"></nav>
 
     <main class="content">
-      <section class="kit-stage">
-        <div class="kit-glow" aria-hidden="true"></div>
-        <div id="drumkitBox"></div>
-        <p class="kit-hint">드럼을 눌러 소리를 들어보세요 — 재생 중엔 악보를 따라 연주됩니다</p>
-      </section>
-
       <section class="lesson-panel">
-        <div class="lesson-head">
+        <div class="lesson-head reveal">
           <p id="courseName" class="course-name"></p>
-          <h1 id="lessonTitle"></h1>
+          <h2 id="lessonTitle"></h2>
           <p id="lessonGoal" class="goal"></p>
         </div>
 
-        <div id="legend" class="legend"></div>
+        <div id="legend" class="legend reveal"></div>
 
-        <div class="notation-wrap">
+        <div class="notation-wrap reveal">
           <div id="countBadge" class="count-badge"></div>
           <div class="notation-scroll">
             <svg id="notation"></svg>
           </div>
         </div>
 
-        <div class="controls">
+        <div class="controls reveal">
           <button id="playBtn" class="play-btn">재생</button>
 
           <div class="bpm-box">
@@ -65,15 +73,20 @@
           <button id="doneBtn" class="done-btn">완료 표시</button>
         </div>
 
-        <div class="tips-box">
-          <h2>연습 팁</h2>
+        <div class="tips-box reveal">
+          <h3>연습 팁</h3>
           <ul id="tips"></ul>
         </div>
 
-        <p class="hint">스페이스바로 재생/정지 · 완벽해지면 빠르기를 5씩 올려보세요</p>
+        <p class="hint">스페이스바로 재생과 정지를 오갈 수 있어요. 완벽해지면 빠르기를 5씩 올려보세요.</p>
       </section>
     </main>
   </div>
+
+  <footer class="footer">
+    <p>찬돌드럼</p>
+    <p class="footer-sub">듣는 귀가 자라면, 치는 손도 자랍니다.</p>
+  </footer>
 
   <script type="module" src="js/app.js"></script>
 </body>

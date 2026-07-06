@@ -83,12 +83,12 @@ export const COURSES = [
         },
         tips: [
           '모든 8비트 음악의 뼈대입니다. 60에서 완벽해지면 5씩 올리세요.',
-          '두 손·한 발이 만나는 순간이 흔들리면 다시 느리게.',
+          '두 손과 한 발이 만나는 순간이 흔들리면 다시 느리게.',
         ],
       },
       {
         id: '8beat-var1',
-        title: '8비트 변형 — 킥 더하기',
+        title: '8비트 변형: 킥 더하기',
         goal: '3박 뒤(앤)에 킥을 하나 더 넣어 그루브를 굴립니다.',
         bpm: 65,
         pattern: {
@@ -169,7 +169,7 @@ export const COURSES = [
       {
         id: 'double-stroke',
         title: '더블 스트로크',
-        goal: 'RRLL — 한 손에 두 번씩, 두 번째 타격도 또렷하게.',
+        goal: 'RRLL, 한 손에 두 번씩. 두 번째 타격도 또렷하게.',
         bpm: 55,
         pattern: {
           SD: 'xxxxxxxxxxxxxxxx',

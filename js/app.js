@@ -204,6 +204,17 @@ function updateDoneButton() {
   btn.classList.toggle('is-done', done);
 }
 
+// ---------- 스크롤 등장 모션 (시선 순서 유도, prefers-reduced-motion이면 CSS가 무효화) ----------
+const io = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    if (e.isIntersecting) {
+      e.target.classList.add('shown');
+      io.unobserve(e.target);
+    }
+  }
+}, { threshold: 0.15 });
+document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+
 // ---------- 시작 ----------
 buildNav();
 wireControls();
