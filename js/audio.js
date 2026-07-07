@@ -26,6 +26,10 @@ const SAMPLE_MAP = {
   T1: { accent: [['hiTom_OH_FF_1', 1.0]],
         normal: [['hiTom_OH_F_1', 1.0]],
         ghost:  [['hiTom_OH_F_1', 0.6]] },
+  // 미드탐: 살라만더에 없어서 하이탐 샘플을 낮게 재생(피치 시프트)
+  MT: { accent: [['hiTom_OH_FF_1', 1.0, 0.8]],
+        normal: [['hiTom_OH_F_1', 1.0, 0.8]],
+        ghost:  [['hiTom_OH_F_1', 0.6, 0.8]] },
   T2: { accent: [['loTom_OH_FF_1', 1.0]],
         normal: [['loTom_OH_MP_1', 1.0]],
         ghost:  [['loTom_OH_MP_1', 0.6]] },
@@ -95,7 +99,7 @@ export class DrumKit {
     if (!layers) return false;
     const level = flags.ghost ? 'ghost' : flags.accent ? 'accent' : 'normal';
     const pool = layers[level];
-    const [name, gainVal] = pool[Math.floor(Math.random() * pool.length)];
+    const [name, gainVal, rate = 1] = pool[Math.floor(Math.random() * pool.length)];
     const buf = this.samples[name];
     if (!buf) return false;
 
@@ -111,6 +115,7 @@ export class DrumKit {
 
     const src = this.ctx.createBufferSource();
     src.buffer = buf;
+    src.playbackRate.value = rate;
     const gain = this.ctx.createGain();
     gain.gain.value = gainVal;
     src.connect(gain);
@@ -206,9 +211,8 @@ export class DrumKit {
     this._noise(t, 1.4, 'highpass', 4500, 0.6, accent ? 0.45 : 0.32, 1.0);
   }
 
-  tom(t, high, { accent } = {}) {
-    const f = high ? 210 : 130;
-    this._tone(t, 'sine', f, f * 0.55, 0.18, accent ? 1.0 : 0.8, 0.3);
+  tom(t, freq, { accent } = {}) {
+    this._tone(t, 'sine', freq, freq * 0.55, 0.18, accent ? 1.0 : 0.8, 0.3);
   }
 
   click(t, downbeat) {
@@ -225,8 +229,9 @@ export class DrumKit {
       case 'OH': return this.hihat(t, { ...flags, open: true });
       case 'RD': return this.ride(t, flags);
       case 'CR': return this.crash(t, flags);
-      case 'T1': return this.tom(t, true, flags);
-      case 'T2': return this.tom(t, false, flags);
+      case 'T1': return this.tom(t, 210, flags);
+      case 'MT': return this.tom(t, 160, flags);
+      case 'T2': return this.tom(t, 128, flags);
     }
   }
 }

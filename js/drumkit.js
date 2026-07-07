@@ -61,15 +61,19 @@ export function buildDrumKit(container, onHit) {
   svg.appendChild(ride);
   pieces.RD = ride;
 
-  // 탐 (킥 위 하이탐, 오른쪽 플로어탐)
+  // 탐 3개 (킥 위 하이탐·미드탐, 오른쪽 플로어탐)
   const t1 = el('g', { class: 'kit-piece', 'data-inst': 'T1' }, svg);
-  drawDrum(t1, 238, 118, 36, 30, '하이탐');
+  drawDrum(t1, 224, 116, 33, 28, '하이탐');
   pieces.T1 = t1;
 
+  const mt = el('g', { class: 'kit-piece', 'data-inst': 'MT' }, svg);
+  drawDrum(mt, 330, 120, 37, 32, '미드탐');
+  pieces.MT = mt;
+
   const t2 = el('g', { class: 'kit-piece', 'data-inst': 'T2' }, svg);
-  drawDrum(t2, 402, 188, 46, 44, '플로어탐');
-  el('line', { x1: 372, y1: 250, x2: 366, y2: 330, class: 'kit-stand' }, t2);
-  el('line', { x1: 432, y1: 250, x2: 438, y2: 330, class: 'kit-stand' }, t2);
+  drawDrum(t2, 412, 192, 46, 44, '플로어탐');
+  el('line', { x1: 382, y1: 254, x2: 376, y2: 330, class: 'kit-stand' }, t2);
+  el('line', { x1: 442, y1: 254, x2: 448, y2: 330, class: 'kit-stand' }, t2);
   pieces.T2 = t2;
 
   // 스네어

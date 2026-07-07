@@ -8,13 +8,14 @@ export const INSTRUMENTS = {
   RD: { name: '라이드',   y: 40, head: 'x',    ledger: false, voice: 'hands' },
   OH: { name: '오픈 하이햇', y: 35, head: 'x', ledger: false, voice: 'hands', open: true },
   HH: { name: '하이햇',   y: 35, head: 'x',    ledger: false, voice: 'hands' },
-  T1: { name: '탐1(하이탐)', y: 45, head: 'note', ledger: false, voice: 'hands' },
+  T1: { name: '하이탐',   y: 45, head: 'note', ledger: false, voice: 'hands' },
+  MT: { name: '미드탐',   y: 50, head: 'note', ledger: false, voice: 'hands' },
   SD: { name: '스네어',   y: 55, head: 'note', ledger: false, voice: 'hands' },
   T2: { name: '플로어탐', y: 65, head: 'note', ledger: false, voice: 'hands' },
   BD: { name: '킥(베이스)', y: 75, head: 'note', ledger: false, voice: 'feet' },
 };
 
-export const LANE_ORDER = ['CR', 'RD', 'OH', 'HH', 'T1', 'SD', 'T2', 'BD'];
+export const LANE_ORDER = ['CR', 'RD', 'OH', 'HH', 'T1', 'MT', 'SD', 'T2', 'BD'];
 
 function cleanLane(str) {
   return str.replace(/\s+/g, '');
