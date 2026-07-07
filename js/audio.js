@@ -14,9 +14,10 @@ const SAMPLE_MAP = {
   HH: { accent: [['hihatClosed_OH_F_1', 1.0], ['hihatClosed_OH_F_2', 1.0]],
         normal: [['hihatClosed_OH_F_1', 0.65], ['hihatClosed_OH_F_2', 0.65]],
         ghost:  [['hihatClosed_OH_P_1', 0.7]] },
-  OH: { accent: [['hihatOpen_OH_F_1', 1.0]],
-        normal: [['hihatOpen_OH_F_1', 0.75]],
-        ghost:  [['hihatOpen_OH_P_1', 0.7]] },
+  // 오픈햇은 완전 개방음이 징처럼 울려서 반개방(semi-open) 녹음 사용
+  OH: { accent: [['hihatSemiOpen4_OH_F_1', 0.9]],
+        normal: [['hihatSemiOpen2_OH_F_1', 0.8], ['hihatSemiOpen4_OH_F_1', 0.75]],
+        ghost:  [['hihatSemiOpen2_OH_P_1', 0.7]] },
   CR: { accent: [['crash1_OH_FF_1', 1.0], ['crash1_OH_FF_2', 1.0]],
         normal: [['crash1_OH_FF_1', 0.7], ['crash1_OH_FF_2', 0.7]],
         ghost:  [['crash1_OH_P_1', 0.7]] },
