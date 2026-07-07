@@ -377,7 +377,7 @@ function wireControls() {
 
 // ---------- 실시간 채보 (유튜브 링크 → 서버 처리 → 진행 상태 표시) ----------
 // API_BASE가 비어 있으면 이 기능은 숨겨지고 '링크 붙여넣기'만 동작한다.
-const API_BASE = ''; // 배포 후 워커 주소로 채움: 'https://chandol-drum-api.<계정>.workers.dev'
+const API_BASE = 'https://chandol-drum-api.soomin020114.workers.dev'; // 배포된 채보 워커
 const PASSCODE_KEY = 'chandol-passcode';
 
 function wireLiveTranscribe() {
