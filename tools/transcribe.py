@@ -32,7 +32,18 @@ def band_deltas(y, sr, t):
     return {k: max(after[k] - before[k], 0.0) for k in after}
 
 
-def transcribe(path, bpm_hint=None):
+def high_energy_at(y, sr, t, dur=0.06):
+    # t 시점의 고역(6kHz+) 절대 에너지 — 심벌 여운 측정용
+    i0 = int(t * sr)
+    seg = y[i0 : i0 + int(dur * sr)]
+    if len(seg) < 256:
+        return 0.0
+    spec = np.abs(np.fft.rfft(seg * np.hanning(len(seg)))) ** 2
+    f = np.fft.rfftfreq(len(seg), 1 / sr)
+    return float(spec[f >= 6000].sum())
+
+
+def transcribe(path, bpm_hint=None, cymbal_detail=False):
     y, sr = librosa.load(path, sr=None, mono=True)
     y = np.concatenate([np.zeros(int(0.15 * sr)), y])  # 곡 첫 타격도 감지되게 침묵 패딩
 
@@ -80,6 +91,16 @@ def transcribe(path, bpm_hint=None):
         # 오픈 하이햇/심벌의 광대역 잔향이 스네어로 오인되는 것 방지: 고역이 압도하면 SD 제외
         if "SD" in hits and d["high"] > 3 * d["noise"]:
             hits.discard("SD")
+        # 심벌 세분화(실험 기능): 여운으로 닫힌햇/오픈햇/크래시 구분
+        # 분리 스템에선 아직 부정확(크래시 재현율 14%) → 기본 꺼짐, --cymbals로 활성화
+        if cymbal_detail and "HH" in hits:
+            e0 = high_energy_at(y, sr, t)
+            e3 = high_energy_at(y, sr, t + 0.10)  # 다음 타격 전, 닫힌햇은 이미 죽는 시점
+            ring = e3 / (e0 + 1e-12)
+            if ring > 0.30 and d["high"] > 0.5 * thr["high"] * DIV["high"]:
+                hits.discard("HH"); hits.add("CR")   # 크게 치고 오래 울림 = 크래시
+            elif ring > 0.30:
+                hits.discard("HH"); hits.add("OH")   # 울리지만 크지 않음 = 오픈햇
         # 킥은 어택 클릭이 저음 대비 아주 조금이라도 있어야 함 — 순수 저음(베이스 새어듦)과 구분
         if "BD" in hits and (d["mid"] + d["noise"]) / (d["low"] + 1e-12) < 3e-5:
             hits.discard("BD")
@@ -88,7 +109,7 @@ def transcribe(path, bpm_hint=None):
             events.setdefault(idx, set()).update(hits)
 
     n_steps = (max(events) // 16 + 1) * 16 if events else 16
-    lanes = {k: ["-"] * n_steps for k in ("HH", "SD", "BD")}
+    lanes = {k: ["-"] * n_steps for k in ("HH", "OH", "CR", "SD", "BD")}
     for idx, hits in events.items():
         for h in hits:
             lanes[h][idx] = "x"
@@ -99,10 +120,21 @@ def transcribe(path, bpm_hint=None):
     return pattern, bpm, len(onsets)
 
 
+def merge_cym(pattern):
+    lanes = [pattern.get(k, "").replace("|", "") for k in ("HH", "OH", "CR")]
+    n = max((len(x) for x in lanes), default=0)
+    out = ["-"] * n
+    for s in lanes:
+        for i, ch in enumerate(s):
+            if ch != "-":
+                out[i] = "x"
+    return "".join(out)
+
+
 def score_at_shift(pattern, truth, shift):
     out = {}
     for lane in ("HH", "SD", "BD"):
-        got = pattern.get(lane, "").replace("|", "")
+        got = merge_cym(pattern) if lane == "HH" else pattern.get(lane, "").replace("|", "")
         exp = truth[lane].replace(" ", "").replace("|", "")
         n = max(len(got) + shift, len(exp))
         got = ("-" * shift + got).ljust(n, "-")
@@ -141,9 +173,12 @@ def make_link(pattern, bpm, title, base="https://kevintheeco.github.io/chandol-d
 
 if __name__ == "__main__":
     import os
+    cym = "--cymbals" in sys.argv
+    argv = [a for a in sys.argv if a != "--cymbals"]
+    sys.argv = argv
     path = sys.argv[1] if len(sys.argv) > 1 else "test.wav"
     bpm_hint = sys.argv[2] if len(sys.argv) > 2 else None
-    pattern, bpm, n_on = transcribe(path, bpm_hint)
+    pattern, bpm, n_on = transcribe(path, bpm_hint, cymbal_detail=cym)
     print(f"감지 BPM: {bpm:.1f} / 타격 {n_on}개")
     for k, v in pattern.items():
         print(f"  {k}: {v}")
