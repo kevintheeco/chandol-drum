@@ -1,11 +1,11 @@
 // 찬돌드럼 — 화면 라우팅(홈/레슨/콘티/채보)과 컨트롤 연결
 
-import { COURSES } from './curriculum.js?v=12';
-import { SONGS } from './songs.js?v=12';
-import { parsePattern, usedInstruments, INSTRUMENTS } from './pattern.js?v=12';
-import { renderNotation } from './notation.js?v=12';
-import { DrumKit, Player } from './audio.js?v=12';
-import { buildDrumKit } from './drumkit.js?v=12';
+import { COURSES } from './curriculum.js?v=13';
+import { SONGS } from './songs.js?v=13';
+import { parsePattern, usedInstruments, INSTRUMENTS } from './pattern.js?v=13';
+import { renderNotation } from './notation.js?v=13';
+import { DrumKit, Player } from './audio.js?v=13';
+import { buildDrumKit } from './drumkit.js?v=13';
 
 const kit = new DrumKit();
 const player = new Player(kit);
@@ -372,6 +372,118 @@ function wireControls() {
   });
 
   window.addEventListener('hashchange', route);
+  wireLiveTranscribe();
+}
+
+// ---------- 실시간 채보 (유튜브 링크 → 서버 처리 → 진행 상태 표시) ----------
+// API_BASE가 비어 있으면 이 기능은 숨겨지고 '링크 붙여넣기'만 동작한다.
+const API_BASE = ''; // 배포 후 워커 주소로 채움: 'https://chandol-drum-api.<계정>.workers.dev'
+const PASSCODE_KEY = 'chandol-passcode';
+
+function wireLiveTranscribe() {
+  if (!API_BASE) return; // 서버 준비 전에는 수동 붙여넣기만 노출
+
+  const gate = $('#passcodeGate');
+  const form = $('#chaeboForm');
+  const saved = localStorage.getItem(PASSCODE_KEY);
+
+  function unlock() {
+    gate.hidden = true;
+    form.hidden = false;
+  }
+  if (saved) unlock();
+  else gate.hidden = false;
+
+  $('#passcodeBtn').addEventListener('click', async () => {
+    const code = $('#passcodeInput').value.trim();
+    const errEl = $('#passcodeError');
+    errEl.hidden = true;
+    if (!code) return;
+    try {
+      const r = await fetch(API_BASE + '/api/health', { headers: { 'x-passcode': code } });
+      if (!r.ok) throw new Error();
+      localStorage.setItem(PASSCODE_KEY, code);
+      unlock();
+    } catch {
+      errEl.textContent = '암호가 틀렸어요. 대표님께 다시 확인해 주세요.';
+      errEl.hidden = false;
+    }
+  });
+  $('#passcodeInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') $('#passcodeBtn').click();
+  });
+
+  $('#fullSongCheck').addEventListener('change', (e) => {
+    $('#rangeRow').style.display = e.target.checked ? 'none' : '';
+  });
+
+  $('#chaeboSubmitBtn').addEventListener('click', async () => {
+    const url = $('#ytUrlInput').value.trim();
+    const errEl = $('#chaeboError');
+    const progressBox = $('#chaeboProgress');
+    const resultBox = $('#chaeboResult');
+    errEl.hidden = true;
+    resultBox.hidden = true;
+    if (!url) {
+      errEl.textContent = '유튜브 링크를 넣어주세요.';
+      errEl.hidden = false;
+      return;
+    }
+    $('#chaeboSubmitBtn').disabled = true;
+    progressBox.hidden = false;
+    $('#progressMsg').textContent = '시작하는 중...';
+
+    try {
+      const res = await fetch(API_BASE + '/api/transcribe', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-passcode': localStorage.getItem(PASSCODE_KEY) || '' },
+        body: JSON.stringify({
+          url,
+          full: $('#fullSongCheck').checked,
+          start: Number($('#startInput').value) || 0,
+          dur: Number($('#durInput').value) || 75,
+        }),
+      });
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const parts = buf.split('\n\n');
+        buf = parts.pop();
+        for (const part of parts) {
+          const line = part.replace(/^data: /, '').trim();
+          if (!line) continue;
+          const ev = JSON.parse(line);
+          if (ev.stage === 'error') {
+            progressBox.hidden = true;
+            errEl.textContent = ev.message || '처리 중 문제가 생겼어요.';
+            errEl.hidden = false;
+          } else if (ev.stage === 'done') {
+            progressBox.hidden = true;
+            resultBox.hidden = false;
+            $('#resultTitle').textContent = `${ev.title} (${ev.bpm} BPM) 악보가 준비됐어요.`;
+            $('#openResultBtn').onclick = () => {
+              const h = ev.link.split('#')[1];
+              const before = location.hash;
+              location.hash = h;
+              if (location.hash === before) route();
+            };
+          } else {
+            $('#progressMsg').textContent = ev.message || '처리 중...';
+          }
+        }
+      }
+    } catch (e) {
+      progressBox.hidden = true;
+      errEl.textContent = '서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.';
+      errEl.hidden = false;
+    } finally {
+      $('#chaeboSubmitBtn').disabled = false;
+    }
+  });
 }
 
 function updateDoneButton() {
