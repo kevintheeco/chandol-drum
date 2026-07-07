@@ -524,3 +524,13 @@ button { font-family: inherit; }
   #printSheet p { font-size: 10pt; color: #555; margin-bottom: 14pt; }
   #printSheet svg { width: 100%; height: auto; page-break-inside: avoid; margin-bottom: 6pt; }
 }
+
+.link-error {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e0433f;
+  background: #fdeceb;
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin-bottom: 10px;
+}

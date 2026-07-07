@@ -1,11 +1,11 @@
 // 찬돌드럼 — 화면 라우팅(홈/레슨/콘티/채보)과 컨트롤 연결
 
-import { COURSES } from './curriculum.js?v=11';
-import { SONGS } from './songs.js?v=11';
-import { parsePattern, usedInstruments, INSTRUMENTS } from './pattern.js?v=11';
-import { renderNotation } from './notation.js?v=11';
-import { DrumKit, Player } from './audio.js?v=11';
-import { buildDrumKit } from './drumkit.js?v=11';
+import { COURSES } from './curriculum.js?v=12';
+import { SONGS } from './songs.js?v=12';
+import { parsePattern, usedInstruments, INSTRUMENTS } from './pattern.js?v=12';
+import { renderNotation } from './notation.js?v=12';
+import { DrumKit, Player } from './audio.js?v=12';
+import { buildDrumKit } from './drumkit.js?v=12';
 
 const kit = new DrumKit();
 const player = new Player(kit);
@@ -337,11 +337,31 @@ function wireControls() {
     updateDoneButton();
   });
 
-  // 채보 링크 붙여넣기
-  $('#openScoreBtn').addEventListener('click', () => {
-    const raw = $('#scoreLinkInput').value.trim();
+  // 채보 링크 붙여넣기 (버튼 클릭 또는 엔터키)
+  function trySubmitScoreLink() {
+    const input = $('#scoreLinkInput');
+    const errEl = $('#scoreLinkError');
+    const raw = input.value.trim();
+    errEl.hidden = true;
+
+    if (!raw) {
+      errEl.textContent = '악보 링크를 먼저 붙여넣어 주세요.';
+      errEl.hidden = false;
+      return;
+    }
     const m = raw.match(/score=[A-Za-z0-9_\-=]+/);
-    if (m) location.hash = m[0];
+    if (!m) {
+      errEl.textContent = '이 링크는 악보 링크가 아니에요. 유튜브 링크가 아니라, 요나단이 채보 후 보내준 "#score="로 시작하는 링크를 붙여넣어 주세요.';
+      errEl.hidden = false;
+      return;
+    }
+    const before = location.hash;
+    location.hash = m[0];
+    if (location.hash === before) route(); // 같은 곡을 다시 열면 해시가 안 바뀌어 라우터가 안 불릴 수 있음
+  }
+  $('#openScoreBtn').addEventListener('click', trySubmitScoreLink);
+  $('#scoreLinkInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') trySubmitScoreLink();
   });
 
   document.addEventListener('keydown', (e) => {

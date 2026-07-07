@@ -2,7 +2,7 @@
 // parsePattern이 만든 bars 데이터를 받아 오선보를 그린다.
 // 반환값: { stepsX: 전체 스텝의 x좌표 배열, width, height } — 재생 헤드용
 
-import { INSTRUMENTS, LANE_ORDER } from './pattern.js?v=11';
+import { INSTRUMENTS, LANE_ORDER } from './pattern.js?v=12';
 
 const STEP_W = 27;
 const MARGIN_X = 16;
