@@ -258,17 +258,25 @@ export class Player {
     return 60 / this.bpm / 4; // 16분음표 길이
   }
 
-  start() {
+  start(fromStep = 0) {
     if (this.playing || this.bars.length === 0) return;
     const ctx = this.kit.ensure();
     this.playing = true;
     this._queue = [];
     const startAt = ctx.currentTime + 0.12;
-    this._pos = this.countIn ? -4 : 0; // 카운트인 = 4분음표 4번
-    this._nextTime = startAt;
     this._totalSteps = this.bars.length * 16;
+    this._startStep = Math.max(0, Math.min(fromStep, this._totalSteps - 1));
+    this._pos = this.countIn ? -4 : this._startStep; // 카운트인 = 4분음표 4번
+    this._nextTime = startAt;
     this._timer = setInterval(() => this._schedule(), 25);
     this._visualLoop();
+  }
+
+  // 재생 중 원하는 위치로 점프
+  jumpTo(step) {
+    if (!this.playing) return;
+    this.stop(false);
+    this.start(step);
   }
 
   stop(fireCallback = true) {
@@ -288,6 +296,7 @@ export class Player {
         this.kit.click(this._nextTime, this._pos === -4);
         this._queue.push({ step: this._pos, time: this._nextTime });
         this._pos++;
+        if (this._pos === 0) this._pos = this._startStep; // 카운트인 후 시작 위치로
         this._nextTime += this.stepDur * 4;
         continue;
       }
@@ -304,7 +313,7 @@ export class Player {
       this._pos++;
       this._nextTime += this.stepDur;
       if (this._pos >= this._totalSteps) {
-        if (this.loop) this._pos = 0;
+        if (this.loop) this._pos = this._startStep; // 반복 시 시작 표시 지점부터
         else {
           const endTime = this._nextTime;
           setTimeout(() => { if (this.playing) this.stop(); },

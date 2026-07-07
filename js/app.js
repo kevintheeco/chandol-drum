@@ -1,11 +1,11 @@
 // 찬돌드럼 — 화면 라우팅(홈/레슨/콘티/채보)과 컨트롤 연결
 
-import { COURSES } from './curriculum.js?v=9';
-import { SONGS } from './songs.js?v=9';
-import { parsePattern, usedInstruments, INSTRUMENTS } from './pattern.js?v=9';
-import { renderNotation } from './notation.js?v=9';
-import { DrumKit, Player } from './audio.js?v=9';
-import { buildDrumKit } from './drumkit.js?v=9';
+import { COURSES } from './curriculum.js?v=10';
+import { SONGS } from './songs.js?v=10';
+import { parsePattern, usedInstruments, INSTRUMENTS } from './pattern.js?v=10';
+import { renderNotation } from './notation.js?v=10';
+import { DrumKit, Player } from './audio.js?v=10';
+import { buildDrumKit } from './drumkit.js?v=10';
 
 const kit = new DrumKit();
 const player = new Player(kit);
@@ -117,10 +117,33 @@ function showItem({ groupLabel, title, goal, bpm, pattern, tips, doneKey }) {
   player.bpm = safeBpm;
   player.bars = bars;
 
-  current = { doneKey, bars, layout };
+  current = { doneKey, bars, layout, startStep: 0 };
   updateDoneButton();
   markActive();
   showView('practiceView');
+}
+
+// ---------- 시작 위치(악보 클릭) ----------
+function stepFromClick(e) {
+  const svg = $('#notation');
+  const rect = svg.getBoundingClientRect();
+  const vb = svg.viewBox.baseVal;
+  const x = (e.clientX - rect.left) * (vb.width / rect.width);
+  let best = 0, bestDist = Infinity;
+  current.layout.stepsX.forEach((sx, i) => {
+    const d = Math.abs(sx - x);
+    if (d < bestDist) { bestDist = d; best = i; }
+  });
+  return best - (best % 4); // 박 단위로 스냅
+}
+
+function showStartMarker() {
+  const ph = $('#playhead');
+  if (!ph || !current) return;
+  if (current.startStep > 0 && !player.playing) {
+    ph.style.display = '';
+    ph.setAttribute('x', current.layout.stepsX[current.startStep] - current.layout.stepW / 2);
+  }
 }
 
 function openLesson(courseId, lessonId) {
@@ -226,6 +249,7 @@ function resetPlayButton() {
   const ph = $('#playhead');
   if (ph) ph.style.display = 'none';
   $('#countBadge').classList.remove('show');
+  showStartMarker(); // 시작 표시는 유지
 }
 
 function wireControls() {
@@ -235,9 +259,22 @@ function wireControls() {
       player.stop();
     } else {
       player.bpm = Number($('#bpm').value);
-      player.start();
+      player.start(current ? current.startStep : 0);
       playBtn.textContent = '정지';
       playBtn.classList.add('playing');
+    }
+  });
+
+  // 악보 클릭 = 그 박부터 재생(재생 중이면 그 자리로 점프)
+  $('#notation').addEventListener('click', (e) => {
+    if (!current) return;
+    const step = stepFromClick(e);
+    current.startStep = step;
+    if (player.playing) {
+      player.bpm = Number($('#bpm').value);
+      player.jumpTo(step);
+    } else {
+      showStartMarker();
     }
   });
   player.onStep = movePlayhead;
