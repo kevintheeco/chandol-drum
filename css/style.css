@@ -498,3 +498,29 @@ button { font-family: inherit; }
   .lesson-head h2 { font-size: 23px; }
   .done-btn { margin-left: 0; }
 }
+
+/* PDF 저장 버튼 */
+.pdf-btn {
+  margin-left: auto;
+  font-size: 13.5px;
+  font-weight: 700;
+  background: var(--blue-soft);
+  border: none;
+  color: var(--blue-deep);
+  border-radius: 999px;
+  padding: 11px 22px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.pdf-btn:hover { background: #d8e8fd; }
+.done-btn { margin-left: 0; }
+
+/* 인쇄 시트 */
+#printSheet { display: none; }
+@media print {
+  body > *:not(#printSheet) { display: none !important; }
+  #printSheet { display: block !important; }
+  #printSheet h1 { font-size: 22pt; letter-spacing: -0.02em; margin-bottom: 2pt; }
+  #printSheet p { font-size: 10pt; color: #555; margin-bottom: 14pt; }
+  #printSheet svg { width: 100%; height: auto; page-break-inside: avoid; margin-bottom: 6pt; }
+}

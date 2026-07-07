@@ -1,11 +1,11 @@
 // 찬돌드럼 — 화면 라우팅(홈/레슨/콘티/채보)과 컨트롤 연결
 
-import { COURSES } from './curriculum.js?v=10';
-import { SONGS } from './songs.js?v=10';
-import { parsePattern, usedInstruments, INSTRUMENTS } from './pattern.js?v=10';
-import { renderNotation } from './notation.js?v=10';
-import { DrumKit, Player } from './audio.js?v=10';
-import { buildDrumKit } from './drumkit.js?v=10';
+import { COURSES } from './curriculum.js?v=11';
+import { SONGS } from './songs.js?v=11';
+import { parsePattern, usedInstruments, INSTRUMENTS } from './pattern.js?v=11';
+import { renderNotation } from './notation.js?v=11';
+import { DrumKit, Player } from './audio.js?v=11';
+import { buildDrumKit } from './drumkit.js?v=11';
 
 const kit = new DrumKit();
 const player = new Player(kit);
@@ -117,10 +117,36 @@ function showItem({ groupLabel, title, goal, bpm, pattern, tips, doneKey }) {
   player.bpm = safeBpm;
   player.bars = bars;
 
-  current = { doneKey, bars, layout, startStep: 0 };
+  current = { doneKey, bars, layout, startStep: 0, title, groupLabel };
   updateDoneButton();
   markActive();
   showView('practiceView');
+}
+
+// ---------- PDF 저장 (인쇄용 4마디 줄바꿈 악보) ----------
+function saveAsPdf() {
+  if (!current) return;
+  let sheet = document.querySelector('#printSheet');
+  if (!sheet) {
+    sheet = document.createElement('div');
+    sheet.id = 'printSheet';
+    document.body.appendChild(sheet);
+  }
+  sheet.innerHTML = '';
+  const h = document.createElement('h1');
+  h.textContent = current.title;
+  const sub = document.createElement('p');
+  sub.textContent = `${current.groupLabel || ''} · ${$('#bpmValue').textContent} BPM · 찬돌드럼`;
+  sheet.appendChild(h);
+  sheet.appendChild(sub);
+  for (let i = 0; i < current.bars.length; i += 4) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    sheet.appendChild(svg);
+    renderNotation(svg, current.bars.slice(i, i + 4));
+    svg.removeAttribute('height');
+    svg.removeAttribute('width');
+  }
+  window.print();
 }
 
 // ---------- 시작 위치(악보 클릭) ----------
@@ -297,6 +323,8 @@ function wireControls() {
   $('#metronome').addEventListener('change', (e) => { player.metronome = e.target.checked; });
   $('#countIn').addEventListener('change', (e) => { player.countIn = e.target.checked; });
   $('#loop').addEventListener('change', (e) => { player.loop = e.target.checked; });
+
+  $('#pdfBtn').addEventListener('click', saveAsPdf);
 
   $('#doneBtn').addEventListener('click', () => {
     if (!current) return;

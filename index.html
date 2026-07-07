@@ -7,7 +7,7 @@
   <meta name="description" content="보고, 듣고, 맞춰 치는 드럼 연습실" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥁</text></svg>" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
-  <link rel="stylesheet" href="css/style.css?v=10" />
+  <link rel="stylesheet" href="css/style.css?v=11" />
 </head>
 <body>
   <header class="topbar">
@@ -105,6 +105,7 @@
               </select>
             </label>
 
+            <button id="pdfBtn" class="pdf-btn">PDF 저장</button>
             <button id="doneBtn" class="done-btn">완료 표시</button>
           </div>
 
@@ -128,7 +129,7 @@
       <ol class="steps">
         <li>연습하고 싶은 곡의 음원 파일이나 유튜브 링크를 요나단(팀 AI 비서)에게 보냅니다.</li>
         <li>몇 분 뒤 악보 링크를 받습니다.</li>
-        <li>아래 칸에 붙여넣으면 이 앱에서 악보로 열립니다.</li>
+        <li>아래 칸에 붙여넣으면 이 앱에서 악보로 열립니다. 열린 화면에서 <strong>PDF 저장</strong>을 누르면 종이 악보로 뽑을 수 있어요.</li>
       </ol>
       <div class="paste-row">
         <input id="scoreLinkInput" type="text" placeholder="받은 악보 링크를 붙여넣으세요" />
@@ -143,6 +144,6 @@
     <p class="footer-sub">듣는 귀가 자라면, 치는 손도 자랍니다.</p>
   </footer>
 
-  <script type="module" src="js/app.js?v=10"></script>
+  <script type="module" src="js/app.js?v=11"></script>
 </body>
 </html>
