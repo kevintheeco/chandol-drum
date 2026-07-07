@@ -1,6 +1,7 @@
-// 찬돌드럼 — 화면 구성과 컨트롤 연결
+// 찬돌드럼 — 화면 라우팅(홈/레슨/콘티/채보)과 컨트롤 연결
 
 import { COURSES } from './curriculum.js';
+import { SONGS } from './songs.js';
 import { parsePattern, usedInstruments, INSTRUMENTS } from './pattern.js';
 import { renderNotation } from './notation.js';
 import { DrumKit, Player } from './audio.js';
@@ -15,7 +16,8 @@ const stageKit = buildDrumKit(document.querySelector('#drumkitBox'), (inst) => {
 const $ = (sel) => document.querySelector(sel);
 const DONE_KEY = 'chandol-done';
 
-let current = null; // { course, lesson, bars, layout }
+let current = null; // { doneKey, bars, layout, bpm }
+let navMode = null; // 'lessons' | 'songs'
 
 function getDone() {
   try { return new Set(JSON.parse(localStorage.getItem(DONE_KEY) || '[]')); }
@@ -25,30 +27,48 @@ function setDone(set) {
   localStorage.setItem(DONE_KEY, JSON.stringify([...set]));
 }
 
-// ---------- 레슨 목록 ----------
-function buildNav() {
+// ---------- 화면 전환 ----------
+function showView(id) {
+  for (const v of document.querySelectorAll('.view, #practiceView')) {
+    v.hidden = v.id !== id;
+  }
+  if (id !== 'practiceView') {
+    player.stop(false);
+    resetPlayButton();
+  }
+  window.scrollTo(0, 0);
+}
+
+// ---------- 목록(사이드바) ----------
+function buildNav(mode) {
+  navMode = mode;
   const nav = $('#lessonNav');
   nav.innerHTML = '';
   const done = getDone();
-  for (const course of COURSES) {
+
+  const groups = mode === 'songs'
+    ? [{ title: '콘티', desc: '곡 악보로 연습합니다. 곡 추가는 요나단에게.', items: SONGS.map((s) => ({ key: `song/${s.id}`, hash: `songs/${s.id}`, title: s.title, sub: s.artist })) }]
+    : COURSES.map((c) => ({ title: c.title, desc: c.desc, items: c.lessons.map((l) => ({ key: `${c.id}/${l.id}`, hash: `${c.id}/${l.id}`, title: l.title })) }));
+
+  for (const group of groups) {
     const sec = document.createElement('div');
     sec.className = 'nav-course';
     const h = document.createElement('h3');
-    h.textContent = course.title;
+    h.textContent = group.title;
     const p = document.createElement('p');
     p.className = 'nav-desc';
-    p.textContent = course.desc;
+    p.textContent = group.desc;
     sec.appendChild(h);
     sec.appendChild(p);
-    for (const lesson of course.lessons) {
+    for (const item of group.items) {
       const btn = document.createElement('button');
       btn.className = 'nav-lesson';
-      btn.dataset.course = course.id;
-      btn.dataset.lesson = lesson.id;
-      const isDone = done.has(`${course.id}/${lesson.id}`);
-      btn.innerHTML = `<span class="nav-check">${isDone ? '✓' : ''}</span><span>${lesson.title}</span>`;
+      btn.dataset.key = item.key;
+      const isDone = done.has(item.key);
+      const sub = item.sub ? `<span class="nav-sub">${item.sub}</span>` : '';
+      btn.innerHTML = `<span class="nav-check">${isDone ? '✓' : ''}</span><span>${item.title}${sub}</span>`;
       if (isDone) btn.classList.add('done');
-      btn.addEventListener('click', () => selectLesson(course.id, lesson.id));
+      btn.addEventListener('click', () => { location.hash = item.hash; });
       sec.appendChild(btn);
     }
     nav.appendChild(sec);
@@ -57,30 +77,20 @@ function buildNav() {
 
 function markActive() {
   document.querySelectorAll('.nav-lesson').forEach((b) => {
-    b.classList.toggle('active',
-      current && b.dataset.course === current.course.id && b.dataset.lesson === current.lesson.id);
+    b.classList.toggle('active', current && b.dataset.key === current.doneKey);
   });
 }
 
-// ---------- 레슨 표시 ----------
-function selectLesson(courseId, lessonId) {
-  const course = COURSES.find((c) => c.id === courseId);
-  const lesson = course.lessons.find((l) => l.id === lessonId);
-  showLesson(course, lesson);
-  location.hash = `${courseId}/${lessonId}`;
-}
-
-function showLesson(course, lesson) {
+// ---------- 악보 표시 (레슨/곡/채보 공용) ----------
+function showItem({ groupLabel, title, goal, bpm, pattern, tips, doneKey }) {
   player.stop(false);
   resetPlayButton();
 
-  const bars = parsePattern(lesson.pattern);
+  const bars = parsePattern(pattern);
+  $('#lessonTitle').textContent = title;
+  $('#lessonGoal').textContent = goal || '';
+  $('#courseName').textContent = groupLabel || '';
 
-  $('#lessonTitle').textContent = lesson.title;
-  $('#lessonGoal').textContent = lesson.goal;
-  $('#courseName').textContent = course.title;
-
-  // 범례
   const legend = $('#legend');
   legend.innerHTML = '';
   for (const inst of usedInstruments(bars)) {
@@ -93,56 +103,88 @@ function showLesson(course, lesson) {
   const layout = renderNotation($('#notation'), bars);
   makePlayhead(layout);
 
-  // 팁
-  const tips = $('#tips');
-  tips.innerHTML = '';
-  for (const tip of lesson.tips || []) {
+  const tipsEl = $('#tips');
+  tipsEl.innerHTML = '';
+  for (const tip of tips || []) {
     const li = document.createElement('li');
     li.textContent = tip;
-    tips.appendChild(li);
+    tipsEl.appendChild(li);
   }
 
-  // BPM 초기화
-  $('#bpm').value = lesson.bpm;
-  $('#bpmValue').textContent = lesson.bpm;
-  player.bpm = lesson.bpm;
+  const safeBpm = Math.min(200, Math.max(40, Math.round(bpm || 60)));
+  $('#bpm').value = safeBpm;
+  $('#bpmValue').textContent = safeBpm;
+  player.bpm = safeBpm;
   player.bars = bars;
 
-  current = { course, lesson, bars, layout };
+  current = { doneKey, bars, layout };
   updateDoneButton();
   markActive();
+  showView('practiceView');
 }
 
-// ---------- 채보 악보 열기 (#score=<base64url JSON> 링크) ----------
-// 채보 도구가 만든 링크로 들어오면 커리큘럼 대신 그 악보를 바로 띄운다
-function tryScoreLink() {
-  const h = location.hash.slice(1);
-  if (!h.startsWith('score=')) return false;
+function openLesson(courseId, lessonId) {
+  const course = COURSES.find((c) => c.id === courseId);
+  const lesson = course && course.lessons.find((l) => l.id === lessonId);
+  if (!lesson) return false;
+  if (navMode !== 'lessons') buildNav('lessons');
+  showItem({
+    groupLabel: course.title, title: lesson.title, goal: lesson.goal,
+    bpm: lesson.bpm, pattern: lesson.pattern, tips: lesson.tips,
+    doneKey: `${course.id}/${lesson.id}`,
+  });
+  return true;
+}
+
+function openSong(songId) {
+  const song = SONGS.find((s) => s.id === songId) || SONGS[0];
+  if (!song) return false;
+  if (navMode !== 'songs') buildNav('songs');
+  showItem({
+    groupLabel: song.artist, title: song.title, goal: song.goal,
+    bpm: song.bpm, pattern: song.pattern, tips: song.tips,
+    doneKey: `song/${song.id}`,
+  });
+  return true;
+}
+
+function openScoreLink(hash) {
   try {
-    const b64 = h.slice(6).replace(/-/g, '+').replace(/_/g, '/');
+    const b64 = hash.slice(6).replace(/-/g, '+').replace(/_/g, '/');
     const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
     const data = JSON.parse(new TextDecoder().decode(bytes));
-    const lesson = {
-      id: 'transcribed',
-      title: data.title || '채보 악보',
+    buildNav('songs');
+    showItem({
+      groupLabel: '채보', title: data.title || '채보 악보',
       goal: data.goal || '음원에서 자동으로 추출한 드럼 악보입니다.',
-      bpm: Math.min(200, Math.max(40, Math.round(data.bpm || 90))),
-      pattern: data.pattern,
+      bpm: data.bpm || 90, pattern: data.pattern,
       tips: data.tips || ['자동 채보 결과는 참고용입니다. 귀로 들으며 어색한 곳을 다듬어 보세요.'],
-    };
-    const course = { id: 'transcribed', title: '채보', lessons: [lesson] };
-    showLesson(course, lesson);
-    document.querySelector('#practice').scrollIntoView();
+      doneKey: 'score/link',
+    });
     return true;
   } catch {
     return false;
   }
 }
 
+// ---------- 라우터 ----------
+function route() {
+  const h = decodeURIComponent(location.hash.replace(/^#/, ''));
+  if (h.startsWith('score=')) { if (openScoreLink(h)) return; }
+  if (h === '' || h === 'home') return showView('homeView');
+  if (h === 'transcribe') return showView('transcribeView');
+  if (h === 'lessons') { openLesson(COURSES[0].id, COURSES[0].lessons[0].id); return; }
+  if (h === 'songs') { openSong(SONGS[0] && SONGS[0].id); return; }
+  if (h.startsWith('songs/')) { openSong(h.slice(6)); return; }
+  const [c, l] = h.split('/');
+  if (openLesson(c, l)) return;
+  showView('homeView');
+}
+
+// ---------- 재생 헤드 ----------
 function makePlayhead(layout) {
   const svg = $('#notation');
-  const ns = 'http://www.w3.org/2000/svg';
-  const ph = document.createElementNS(ns, 'rect');
+  const ph = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
   ph.setAttribute('id', 'playhead');
   ph.setAttribute('y', 4);
   ph.setAttribute('width', layout.stepW);
@@ -156,12 +198,10 @@ function movePlayhead(stepIdx) {
   const ph = $('#playhead');
   if (!ph || !current) return;
   if (stepIdx >= 0) {
-    // 무대 드럼세트도 악보를 따라 반짝인다
     const bar = current.bars[Math.floor(stepIdx / 16)];
     for (const hit of bar.steps[stepIdx % 16].hits) stageKit.flash(hit.inst);
   }
   if (stepIdx < 0) {
-    // 카운트인 표시
     ph.style.display = 'none';
     $('#countBadge').textContent = ['하나', '둘', '셋', '넷'][stepIdx + 4];
     $('#countBadge').classList.add('show');
@@ -170,6 +210,12 @@ function movePlayhead(stepIdx) {
   $('#countBadge').classList.remove('show');
   ph.style.display = '';
   ph.setAttribute('x', current.layout.stepsX[stepIdx] - current.layout.stepW / 2);
+  // 긴 곡: 재생 헤드를 따라 악보를 옆으로 스크롤
+  const scroller = document.querySelector('.notation-scroll');
+  const x = current.layout.stepsX[stepIdx];
+  if (x < scroller.scrollLeft + 60 || x > scroller.scrollLeft + scroller.clientWidth - 120) {
+    scroller.scrollTo({ left: Math.max(0, x - 100), behavior: 'auto' });
+  }
 }
 
 // ---------- 컨트롤 ----------
@@ -201,13 +247,14 @@ function wireControls() {
     $('#bpmValue').textContent = e.target.value;
     player.bpm = Number(e.target.value);
   });
+
   const kitSelect = $('#kitSelect');
   kitSelect.value = localStorage.getItem('chandol-kit') || 'acoustic';
   kit.kit = kitSelect.value;
   kitSelect.addEventListener('change', (e) => {
     kit.kit = e.target.value;
     localStorage.setItem('chandol-kit', e.target.value);
-    kit.play('SD', kit.now()); // 바뀐 소리 즉시 미리듣기
+    kit.play('SD', kit.now());
   });
 
   $('#metronome').addEventListener('change', (e) => { player.metronome = e.target.checked; });
@@ -216,54 +263,40 @@ function wireControls() {
 
   $('#doneBtn').addEventListener('click', () => {
     if (!current) return;
-    const key = `${current.course.id}/${current.lesson.id}`;
     const done = getDone();
-    if (done.has(key)) done.delete(key);
-    else done.add(key);
+    if (done.has(current.doneKey)) done.delete(current.doneKey);
+    else done.add(current.doneKey);
     setDone(done);
-    buildNav();
+    buildNav(navMode);
     markActive();
     updateDoneButton();
   });
 
-  // 스페이스바로 재생/정지
+  // 채보 링크 붙여넣기
+  $('#openScoreBtn').addEventListener('click', () => {
+    const raw = $('#scoreLinkInput').value.trim();
+    const m = raw.match(/score=[A-Za-z0-9_\-=]+/);
+    if (m) location.hash = m[0];
+  });
+
   document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+    if (e.code === 'Space' && e.target.tagName !== 'INPUT' && !$('#practiceView').hidden) {
       e.preventDefault();
       playBtn.click();
     }
   });
+
+  window.addEventListener('hashchange', route);
 }
 
 function updateDoneButton() {
   if (!current) return;
-  const done = getDone().has(`${current.course.id}/${current.lesson.id}`);
+  const done = getDone().has(current.doneKey);
   const btn = $('#doneBtn');
   btn.textContent = done ? '✓ 완료함' : '완료 표시';
   btn.classList.toggle('is-done', done);
 }
 
-// ---------- 스크롤 등장 모션 (시선 순서 유도, prefers-reduced-motion이면 CSS가 무효화) ----------
-const io = new IntersectionObserver((entries) => {
-  for (const e of entries) {
-    if (e.isIntersecting) {
-      e.target.classList.add('shown');
-      io.unobserve(e.target);
-    }
-  }
-}, { threshold: 0.15 });
-document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
-
 // ---------- 시작 ----------
-buildNav();
 wireControls();
-
-if (!tryScoreLink()) {
-  const [hc, hl] = location.hash.replace('#', '').split('/');
-  const first = COURSES[0];
-  if (hc && hl && COURSES.some((c) => c.id === hc && c.lessons.some((l) => l.id === hl))) {
-    selectLesson(hc, hl);
-  } else {
-    selectLesson(first.id, first.lessons[0].id);
-  }
-}
+route();
