@@ -66,7 +66,7 @@ def transcribe(path, bpm_hint=None):
 
     # 문턱 = '진짜 타격 크기(상위 5% 수준)'의 일정 비율.
     # 실측: 진짜 타격과 가짜(잔향·찌꺼기)는 같은 대역에서 수십~수천 배 차이 → 비율로 확실히 갈림
-    DIV = {"low": 10, "mid": 10, "noise": 10, "high": 30}  # 하이햇은 여린 타격 허용 폭을 넓게
+    DIV = {"low": 10, "mid": 10, "noise": 10, "high": 80}  # 하이햇은 여린 타격 허용 폭을 넓게(크래시가 기준을 끌어올림)
     thr = {}
     for band in BANDS:
         vals = [d[band] for d in deltas if d]
@@ -77,6 +77,9 @@ def transcribe(path, bpm_hint=None):
         if d is None:
             continue
         hits = {inst for inst, (band, _) in RULES.items() if d[band] > thr[band]}
+        # 오픈 하이햇/심벌의 광대역 잔향이 스네어로 오인되는 것 방지: 고역이 압도하면 SD 제외
+        if "SD" in hits and d["high"] > 3 * d["noise"]:
+            hits.discard("SD")
         # 킥은 어택 클릭이 저음 대비 아주 조금이라도 있어야 함 — 순수 저음(베이스 새어듦)과 구분
         if "BD" in hits and (d["mid"] + d["noise"]) / (d["low"] + 1e-12) < 3e-5:
             hits.discard("BD")
