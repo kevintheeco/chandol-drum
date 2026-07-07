@@ -1,11 +1,11 @@
 // 찬돌드럼 — 화면 라우팅(홈/레슨/콘티/채보)과 컨트롤 연결
 
-import { COURSES } from './curriculum.js';
-import { SONGS } from './songs.js';
-import { parsePattern, usedInstruments, INSTRUMENTS } from './pattern.js';
-import { renderNotation } from './notation.js';
-import { DrumKit, Player } from './audio.js';
-import { buildDrumKit } from './drumkit.js';
+import { COURSES } from './curriculum.js?v=8';
+import { SONGS } from './songs.js?v=8';
+import { parsePattern, usedInstruments, INSTRUMENTS } from './pattern.js?v=8';
+import { renderNotation } from './notation.js?v=8';
+import { DrumKit, Player } from './audio.js?v=8';
+import { buildDrumKit } from './drumkit.js?v=8';
 
 const kit = new DrumKit();
 const player = new Player(kit);
