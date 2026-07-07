@@ -125,7 +125,19 @@ def score(pattern, truth):
     return best, best_shift, round(best_avg)
 
 
+def make_link(pattern, bpm, title, base="https://kevintheeco.github.io/chandol-drum/"):
+    # 앱이 바로 열 수 있는 #score= 링크 생성 (base64url JSON)
+    import base64
+    payload = json.dumps(
+        {"title": title, "bpm": round(bpm, 1), "pattern": pattern},
+        ensure_ascii=False, separators=(",", ":"),
+    ).encode("utf-8")
+    b64 = base64.urlsafe_b64encode(payload).decode().rstrip("=")
+    return f"{base}#score={b64}"
+
+
 if __name__ == "__main__":
+    import os
     path = sys.argv[1] if len(sys.argv) > 1 else "test.wav"
     bpm_hint = sys.argv[2] if len(sys.argv) > 2 else None
     pattern, bpm, n_on = transcribe(path, bpm_hint)
@@ -138,3 +150,5 @@ if __name__ == "__main__":
         print(f"채점(쉬프트 {shift}칸): 평균 F1 {avg}점 / {json.dumps(s, ensure_ascii=False)}")
     except FileNotFoundError:
         pass
+    title = os.path.splitext(os.path.basename(path))[0] + " (자동 채보)"
+    print("악보 링크:", make_link(pattern, bpm, title))

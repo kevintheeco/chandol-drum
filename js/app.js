@@ -64,11 +64,16 @@ function markActive() {
 
 // ---------- 레슨 표시 ----------
 function selectLesson(courseId, lessonId) {
+  const course = COURSES.find((c) => c.id === courseId);
+  const lesson = course.lessons.find((l) => l.id === lessonId);
+  showLesson(course, lesson);
+  location.hash = `${courseId}/${lessonId}`;
+}
+
+function showLesson(course, lesson) {
   player.stop(false);
   resetPlayButton();
 
-  const course = COURSES.find((c) => c.id === courseId);
-  const lesson = course.lessons.find((l) => l.id === lessonId);
   const bars = parsePattern(lesson.pattern);
 
   $('#lessonTitle').textContent = lesson.title;
@@ -106,7 +111,32 @@ function selectLesson(courseId, lessonId) {
   current = { course, lesson, bars, layout };
   updateDoneButton();
   markActive();
-  location.hash = `${courseId}/${lessonId}`;
+}
+
+// ---------- 채보 악보 열기 (#score=<base64url JSON> 링크) ----------
+// 채보 도구가 만든 링크로 들어오면 커리큘럼 대신 그 악보를 바로 띄운다
+function tryScoreLink() {
+  const h = location.hash.slice(1);
+  if (!h.startsWith('score=')) return false;
+  try {
+    const b64 = h.slice(6).replace(/-/g, '+').replace(/_/g, '/');
+    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const data = JSON.parse(new TextDecoder().decode(bytes));
+    const lesson = {
+      id: 'transcribed',
+      title: data.title || '채보 악보',
+      goal: data.goal || '음원에서 자동으로 추출한 드럼 악보입니다.',
+      bpm: Math.min(200, Math.max(40, Math.round(data.bpm || 90))),
+      pattern: data.pattern,
+      tips: data.tips || ['자동 채보 결과는 참고용입니다. 귀로 들으며 어색한 곳을 다듬어 보세요.'],
+    };
+    const course = { id: 'transcribed', title: '채보', lessons: [lesson] };
+    showLesson(course, lesson);
+    document.querySelector('#practice').scrollIntoView();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function makePlayhead(layout) {
@@ -228,10 +258,12 @@ document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 buildNav();
 wireControls();
 
-const [hc, hl] = location.hash.replace('#', '').split('/');
-const first = COURSES[0];
-if (hc && hl && COURSES.some((c) => c.id === hc && c.lessons.some((l) => l.id === hl))) {
-  selectLesson(hc, hl);
-} else {
-  selectLesson(first.id, first.lessons[0].id);
+if (!tryScoreLink()) {
+  const [hc, hl] = location.hash.replace('#', '').split('/');
+  const first = COURSES[0];
+  if (hc && hl && COURSES.some((c) => c.id === hc && c.lessons.some((l) => l.id === hl))) {
+    selectLesson(hc, hl);
+  } else {
+    selectLesson(first.id, first.lessons[0].id);
+  }
 }
