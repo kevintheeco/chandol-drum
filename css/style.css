@@ -343,6 +343,7 @@ button { font-family: inherit; }
 .nt-count { font-size: 10px; fill: #9aa1ac; text-anchor: middle; }
 .nt-count-beat { font-size: 12px; fill: #454c59; font-weight: 700; }
 .nt-stick { font-size: 11px; fill: var(--blue-deep); text-anchor: middle; font-weight: 700; }
+.nt-lyric { font-size: 12px; fill: #2a3038; text-anchor: start; font-weight: 600; }
 .nt-rest { fill: #232936; }
 .nt-rest-stroke { fill: none; stroke: #232936; stroke-linecap: round; stroke-linejoin: miter; }
 .nt-tie { fill: none; stroke: #454c59; stroke-width: 1.5; }

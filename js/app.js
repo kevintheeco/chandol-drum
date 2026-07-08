@@ -1,11 +1,11 @@
 // 찬돌드럼 — 화면 라우팅(홈/레슨/콘티/채보)과 컨트롤 연결
 
-import { COURSES } from './curriculum.js?v=16';
-import { SONGS } from './songs.js?v=16';
-import { parsePattern, usedInstruments, INSTRUMENTS } from './pattern.js?v=16';
-import { renderNotation } from './notation.js?v=16';
-import { DrumKit, Player } from './audio.js?v=16';
-import { buildDrumKit } from './drumkit.js?v=16';
+import { COURSES } from './curriculum.js?v=17';
+import { SONGS } from './songs.js?v=17';
+import { parsePattern, usedInstruments, INSTRUMENTS } from './pattern.js?v=17';
+import { renderNotation } from './notation.js?v=17';
+import { DrumKit, Player } from './audio.js?v=17';
+import { buildDrumKit } from './drumkit.js?v=17';
 
 const kit = new DrumKit();
 const player = new Player(kit);
@@ -82,7 +82,7 @@ function markActive() {
 }
 
 // ---------- 악보 표시 (레슨/곡/채보 공용) ----------
-function showItem({ groupLabel, title, goal, bpm, pattern, tips, doneKey }) {
+function showItem({ groupLabel, title, goal, bpm, pattern, tips, doneKey, lyrics }) {
   player.stop(false);
   resetPlayButton();
 
@@ -100,7 +100,7 @@ function showItem({ groupLabel, title, goal, bpm, pattern, tips, doneKey }) {
     legend.appendChild(chip);
   }
 
-  const layout = renderNotation($('#notation'), bars);
+  const layout = renderNotation($('#notation'), bars, { lyrics });
   makePlayhead(layout);
 
   const tipsEl = $('#tips');
@@ -117,7 +117,7 @@ function showItem({ groupLabel, title, goal, bpm, pattern, tips, doneKey }) {
   player.bpm = safeBpm;
   player.bars = bars;
 
-  current = { doneKey, bars, layout, startStep: 0, title, groupLabel };
+  current = { doneKey, bars, layout, startStep: 0, title, groupLabel, lyrics };
   updateDoneButton();
   markActive();
   showView('practiceView');
@@ -142,7 +142,7 @@ function saveAsPdf() {
   for (let i = 0; i < current.bars.length; i += 4) {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     sheet.appendChild(svg);
-    renderNotation(svg, current.bars.slice(i, i + 4));
+    renderNotation(svg, current.bars.slice(i, i + 4), { lyrics: current.lyrics, barOffset: i });
     svg.removeAttribute('height');
     svg.removeAttribute('width');
   }
@@ -192,7 +192,7 @@ function openSong(songId) {
   showItem({
     groupLabel: song.artist, title: song.title, goal: song.goal,
     bpm: song.bpm, pattern: song.pattern, tips: song.tips,
-    doneKey: `song/${song.id}`,
+    doneKey: `song/${song.id}`, lyrics: song.lyrics,
   });
   return true;
 }

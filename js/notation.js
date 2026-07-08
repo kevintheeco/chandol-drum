@@ -2,7 +2,7 @@
 // parsePattern이 만든 bars 데이터를 받아 오선보를 그린다.
 // 반환값: { stepsX: 전체 스텝의 x좌표 배열, width, height } — 재생 헤드용
 
-import { INSTRUMENTS, LANE_ORDER } from './pattern.js?v=16';
+import { INSTRUMENTS, LANE_ORDER } from './pattern.js?v=17';
 
 const STEP_W = 27;
 const MARGIN_X = 16;
@@ -13,6 +13,8 @@ const FOOT_BEAM_Y = 96;
 const COUNT_Y = 112;
 const STICK_Y = 126;
 const HEIGHT = 134;
+const LYRIC_Y = 147;          // 가사 줄(카운트·스티킹 아래)
+const LYRIC_EXTRA = 20;       // 가사 있을 때 늘리는 세로 여유
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const COUNT_LABEL = ['1', 'e', '&', 'a', '2', 'e', '&', 'a', '3', 'e', '&', 'a', '4', 'e', '&', 'a'];
@@ -164,13 +166,17 @@ function drawBeamGroup(g, group, beamY, dir) {
   }
 }
 
-export function renderNotation(svg, bars) {
+export function renderNotation(svg, bars, opts = {}) {
   svg.innerHTML = '';
+  const { lyrics, barOffset = 0 } = opts;
   const barW = 16 * STEP_W;
   const width = MARGIN_X * 2 + bars.length * barW;
-  svg.setAttribute('viewBox', `0 0 ${width} ${HEIGHT}`);
+  // 이 화면 구간에 얹을 가사가 하나라도 있으면 아래 여유를 준다
+  const hasLyric = lyrics && bars.some((_, b) => lyrics[barOffset + b + 1]);
+  const height = HEIGHT + (hasLyric ? LYRIC_EXTRA : 0);
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
   svg.setAttribute('width', width);
-  svg.setAttribute('height', HEIGHT);
+  svg.setAttribute('height', height);
 
   const g = el('g', {});
   svg.appendChild(g);
@@ -272,9 +278,17 @@ export function renderNotation(svg, bars) {
         if (bar.steps[c].hits.some((h) => h.inst === 'BD')) drawTie(g, x1, x2, false);
       }
     }
+
+    // 가사 — 구절이 시작되는 마디 아래에 표시(람쥐드럼 악보 관례)
+    const lyric = lyrics && lyrics[barOffset + b + 1];
+    if (lyric) {
+      const t = el('text', { x: MARGIN_X + b * barW + 6, y: LYRIC_Y, class: 'nt-lyric' });
+      t.textContent = lyric;
+      g.appendChild(t);
+    }
   });
 
-  return { stepsX, width, height: HEIGHT, stepW: STEP_W };
+  return { stepsX, width, height, stepW: STEP_W };
 }
 
 // 범례용: 레슨에 나오는 악기 이름 목록
