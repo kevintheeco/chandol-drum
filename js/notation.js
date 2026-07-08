@@ -2,7 +2,7 @@
 // parsePattern이 만든 bars 데이터를 받아 오선보를 그린다.
 // 반환값: { stepsX: 전체 스텝의 x좌표 배열, width, height } — 재생 헤드용
 
-import { INSTRUMENTS, LANE_ORDER } from './pattern.js?v=15';
+import { INSTRUMENTS, LANE_ORDER } from './pattern.js?v=16';
 
 const STEP_W = 27;
 const MARGIN_X = 16;
@@ -93,24 +93,29 @@ function voiceEvents(bar, voice) {
 }
 
 function drawRest(g, x, dur, region) {
-  const y = region === 'hands' ? 50 : 88;
+  // 표준 음악 쉼표 글리프 (채보 악보 기준). region으로 세로 위치.
+  const y = region === 'hands' ? 48 : 68;
+  const s = 1.1;
   const base = ({ 3: 2, 6: 4, 12: 8 })[dur] || dur;
   const dotted = dur === 3 || dur === 6 || dur === 12;
-  if (base >= 16) {
-    g.appendChild(el('rect', { x: x - 6, y: y - 9, width: 12, height: 4.5, class: 'nt-rest' }));
-  } else if (base === 8) {
-    g.appendChild(el('rect', { x: x - 6, y: y - 4, width: 12, height: 4.5, class: 'nt-rest' }));
-  } else if (base === 4) {
-    g.appendChild(el('path', {
-      d: `M ${x - 3},${y - 11} Q ${x + 5},${y - 6} ${x - 2},${y - 1} Q ${x - 7},${y + 4} ${x + 3},${y + 7} Q ${x - 2},${y + 10} ${x + 3},${y + 13}`,
-      class: 'nt-rest-stroke',
-    }));
-  } else {
-    g.appendChild(el('line', { x1: x + 3.5, y1: y - 8, x2: x - 3.5, y2: y + 8, class: 'nt-rest-stroke' }));
-    g.appendChild(el('circle', { cx: x + 2.8, cy: y - 7, r: 2.1, class: 'nt-rest' }));
-    if (base === 1) g.appendChild(el('circle', { cx: x + 0.5, cy: y - 1.5, r: 2.1, class: 'nt-rest' }));
+  const stroke = (d, w) => g.appendChild(el('path', { d, class: 'nt-rest-stroke', 'stroke-width': w.toFixed(1) }));
+  const fill = (d) => g.appendChild(el('path', { d, class: 'nt-rest' }));
+  if (base >= 16) {           // 온쉼표: 선 아래 매달린 사각
+    g.appendChild(el('rect', { x: x - 5 * s, y: y + s, width: 10 * s, height: 3.4 * s, class: 'nt-rest' }));
+  } else if (base === 8) {    // 2분쉼표: 선 위 사각
+    g.appendChild(el('rect', { x: x - 5 * s, y: y - 4.4 * s, width: 10 * s, height: 3.4 * s, class: 'nt-rest' }));
+  } else if (base === 4) {    // 4분쉼표: 지그재그 + 하단 갈고리
+    stroke(`M ${x - 2.6 * s},${y - 8 * s} L ${x + 2.4 * s},${y - 2.4 * s} L ${x - 2.2 * s},${y + 2.2 * s} L ${x + 2.8 * s},${y + 8 * s}`, 2.0 * s);
+    stroke(`M ${x + 2.8 * s},${y + 8 * s} C ${x - 1.2 * s},${y + 5.4 * s} ${x - 1.6 * s},${y + 9.5 * s} ${x + 1.6 * s},${y + 10.5 * s}`, 1.5 * s);
+  } else if (base === 2) {    // 8분쉼표: 물방울 깃발 + 사선
+    fill(`M ${x + 2.2 * s},${y - 6 * s} C ${x + 3.6 * s},${y - 6.6 * s} ${x + 3.8 * s},${y - 4.3 * s} ${x + 1.8 * s},${y - 4.1 * s} C ${x + 0.2 * s},${y - 4 * s} ${x - 0.8 * s},${y - 5.2 * s} ${x + 0.4 * s},${y - 6 * s} Z`);
+    stroke(`M ${x + 3.0 * s},${y - 6.2 * s} L ${x - 2.2 * s},${y + 6 * s}`, 1.4 * s);
+  } else {                    // 16분쉼표: 깃발 2개 + 사선
+    fill(`M ${x + 2.4 * s},${y - 7 * s} C ${x + 3.8 * s},${y - 7.6 * s} ${x + 4.0 * s},${y - 5.3 * s} ${x + 2.0 * s},${y - 5.1 * s} C ${x + 0.4 * s},${y - 5 * s} ${x - 0.6 * s},${y - 6.2 * s} ${x + 0.6 * s},${y - 7 * s} Z`);
+    fill(`M ${x + 1.4 * s},${y - 2.2 * s} C ${x + 2.8 * s},${y - 2.8 * s} ${x + 3.0 * s},${y - 0.5 * s} ${x + 1.0 * s},${y - 0.3 * s} C ${x - 0.6 * s},${y - 0.2 * s} ${x - 1.6 * s},${y - 1.4 * s} ${x - 0.4 * s},${y - 2.2 * s} Z`);
+    stroke(`M ${x + 3.2 * s},${y - 7 * s} L ${x - 2.6 * s},${y + 6.5 * s}`, 1.4 * s);
   }
-  if (dotted) g.appendChild(el('circle', { cx: x + 8, cy: y, r: 1.5, class: 'nt-rest' }));
+  if (dotted) g.appendChild(el('circle', { cx: x + 6.5 * s, cy: y, r: 1.5, class: 'nt-rest' }));
 }
 
 function drawTie(g, x1, x2, above) {
