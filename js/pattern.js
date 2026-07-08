@@ -50,6 +50,7 @@ export function parsePattern(pattern) {
           inst: lane,
           accent: ch === 'X' || ch === 'O',
           ghost: ch === 'g',
+          flam: ch === 'f',
         });
       }
       steps.push({ hits, sticking });
